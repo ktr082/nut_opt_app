@@ -1,0 +1,6 @@
+{
+    // poetryで自動フォーマットを使うためのPATH
+    "python.formatting.autopep8Path": "/Users/moritaippei/Library/Caches/pypoetry/virtualenvs/nut-opt-app-hxBcaBo5-py3.9/bin/autopep8",
+    // pythonPath
+    "python.pythonPath": "/Users/moritaippei/Library/Caches/pypoetry/virtualenvs/nut-opt-app-hxBcaBo5-py3.9/bin/python",
+}
