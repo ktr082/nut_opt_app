@@ -137,9 +137,8 @@ def make_df_for_graph(nut_df_by_opted_food, req_df, opted_df, opted_food_num):
 
     return graph_df, graph_df_rate
 
+
 # グラフ用のデータフレームからグラフを作成
-
-
 def show_stack_bargraph(df, title, ytitle, opted_food_num):
     data = [go.Bar(x=df.index, y=df.iloc[:, i], name=df.columns[i])
             for i in range(opted_food_num)]
@@ -154,15 +153,15 @@ def show_stack_bargraph(df, title, ytitle, opted_food_num):
     return fig
 
 
+# グラフに横線を入れる関数
 def add_horizon_line(fig, const, color, nut_num):
-    new_fig = copy.deepcopy(fig)
-    new_fig.add_shape(type='line',
-                      x0=-1, y0=const, x1=nut_num, y1=const,
-                      # color:'MediumPurple','LightSeaGreen'ほか
-                      line=dict(color=color, width=2, dash="dot"),
-                      xref='x',
-                      yref='y')
-    return new_fig
+    fig.add_shape(type='line',
+                  x0=-1, y0=const, x1=nut_num, y1=const,
+                  # color:'MediumPurple','LightSeaGreen'ほか
+                  line=dict(color=color, width=2, dash="dot"),
+                  xref='x',
+                  yref='y')
+    return fig
 
 
 # streamlitで描画
