@@ -33,7 +33,7 @@ def main():
         graph_df_rate, '総摂取栄養グラフ', '基準量に対する割合', opted_food_num)
     add_horizon_line(fig, upper_rate, 'Black', nut_num)
     add_horizon_line(fig, lower_rate, 'Red', nut_num)
-    st_display(graph_df_rate, fig)
+    st_display(food_df, graph_df_rate, fig)
 
 
 # CSVの読み込み
@@ -116,7 +116,6 @@ def calc_nut_by_food(opted_df):
 def make_df_for_graph(nut_df_by_opted_food, req_df, opted_df, opted_food_num):
     total_nut = nut_df_by_opted_food.iloc[:, 4:-1].sum()
     total_nut = pd.DataFrame(total_nut).T
-
     lower_limit_df = req_df * lower_rate
 
     graph_df = pd.concat([total_nut, lower_limit_df])
@@ -158,29 +157,31 @@ def add_horizon_line(fig, const, color, nut_num):
     fig.add_shape(type='line',
                   x0=-1, y0=const, x1=nut_num, y1=const,
                   # color:'MediumPurple','LightSeaGreen'ほか
-                  line=dict(color=color, width=2, dash="dot"),
+                  line=dict(color=color, width=3, dash="dot"),
                   xref='x',
                   yref='y')
     return fig
 
 
 # streamlitで描画
-def st_display(graph_df_rate, fig):
+def st_display(food_df, graph_df_rate, fig):
     # sidebar
-    st.sidebar.selectbox('ラベル', ('選択肢1', '選択肢2', '選択肢3'))
-
-    with st.sidebar.beta_container():
-        chosen = st.radio(
-            'Sorting hat',
-            ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
-        st.write(f"You are in {chosen} house!")
+    st.sidebar.markdown(('# How to use'))
+    st.sidebar.text(
+        '君が食べるものを選択して、下のボタンをポチポチやってね。\
+        いい感じにコストを抑えて栄養が取れるように最適化するよ！さぁ、君も健康になっちゃおう！')
+    food_max_num = st.sidebar.number_input(label='同食材最大選択数', min_value=1,
+                                           value=8, step=1)
+    lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
+                                               6.0, (0.6, 3.0), 0.1)
+    st.sidebar.button('再実行')
 
     # main contents
-    st.title('ぼくのかんがえたさいきょうの食生活')
-    st.markdown('# Markdown documents')
-    st.markdown('# a')
-    # st.write(graph_df_rate)
-    st.write(graph_df_rate)
+    st.title('Optimizetion of your diet')
+    st.markdown('')
+    st.markdown('')
+    st.markdown('最適化対象食材リスト')
+    st.write(food_df)
     st.write(fig)
 
 
