@@ -33,7 +33,8 @@ def main():
         graph_df_rate, '総摂取栄養グラフ', '基準量に対する割合', opted_food_num)
     add_horizon_line(fig, upper_rate, 'Black', nut_num)
     add_horizon_line(fig, lower_rate, 'Red', nut_num)
-    st_display(food_df, graph_df_rate, fig)
+    # st_display(food_df, graph_df_rate, fig)
+    return food_df, fig
 
 
 # CSVの読み込み
@@ -163,26 +164,23 @@ def add_horizon_line(fig, const, color, nut_num):
     return fig
 
 
-# streamlitで描画
-def st_display(food_df, graph_df_rate, fig):
-    # sidebar
-    st.sidebar.markdown(('# How to use'))
-    st.sidebar.text(
-        '君が食べるものを選択して、下のボタンをポチポチやってね。\
-        いい感じにコストを抑えて栄養が取れるように最適化するよ！さぁ、君も健康になっちゃおう！')
-    food_max_num = st.sidebar.number_input(label='同食材最大選択数', min_value=1,
-                                           value=8, step=1)
-    lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
-                                               6.0, (0.6, 3.0), 0.1)
-    st.sidebar.button('再実行')
+# sidebar
+st.sidebar.markdown(('# How to use'))
+st.sidebar.text(
+    '君が食べるものを選択して、下のボタンをポチポチやってね。\
+    いい感じにコストを抑えて栄養が取れるように最適化するよ！さぁ、君も健康になっちゃおう！')
+food_max_num = st.sidebar.number_input(label='同食材最大選択数', min_value=1,
+                                       value=8, step=1)
+lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
+                                           6.0, (0.6, 3.0), 0.1)
 
-    # main contents
-    st.title('Optimizetion of your diet')
-    st.markdown('')
-    st.markdown('')
-    st.markdown('最適化対象食材リスト')
-    st.write(food_df)
-    st.write(fig)
+# 上の定義変更を受けて最適化を再計算（自動実行）
+food_df, fig = main()
 
-
-main()
+# main contents
+st.title('Optimizetion of your diet')
+st.markdown('')
+st.markdown('')
+st.markdown('最適化対象食材リスト')
+st.write(food_df)
+st.write(fig)
