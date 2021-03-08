@@ -1,6 +1,4 @@
 import pandas as pd
-# pd.set_option("display.max_rows",100)
-# pd.set_option("display.max_columns",100)
 from pulp import *
 import plotly.graph_objs as go
 import plotly.io as pio
@@ -14,7 +12,7 @@ upper_rate = 3.0
 food_max_num = 8  # 同じものを何単位食べていいか
 
 
-def main():
+def main_process():
     # データ読み込み
     food_df, req_df = read_csvs(
         "data/food_data.csv", "data/required_nutrition.csv")
@@ -22,7 +20,7 @@ def main():
     # 定数生成
     nut_num = req_df.shape[1]  # 栄養素の数
     # 最適化の実行
-    opted_df, total_cost, opted_food_num = calc_num_by_opt(
+    opt_status, opted_df, total_cost, opted_food_num = calc_num_by_opt(
         food_df, req_df, food_max_num)
     # 最適化された食材×数量の持つ栄養素を計算
     nut_df_by_opted_food = calc_nut_by_food(opted_df)
@@ -30,11 +28,12 @@ def main():
     graph_df, graph_df_rate = make_df_for_graph(
         nut_df_by_opted_food, req_df, opted_df, opted_food_num)
     fig = show_stack_bargraph(
-        graph_df_rate, '総摂取栄養グラフ', '基準量に対する割合', opted_food_num)
-    add_horizon_line(fig, upper_rate, 'Black', nut_num)
+        graph_df_rate, '最適化結果グラフ', '基準量に対する割合', opted_food_num)
+    add_horizon_line(fig, upper_rate, 'Blue', nut_num)
+    add_horizon_line(fig, 1.0, 'Black', nut_num)
     add_horizon_line(fig, lower_rate, 'Red', nut_num)
     # st_display(food_df, graph_df_rate, fig)
-    return food_df, fig
+    return opt_status, food_df, total_cost, opted_df, fig
 
 
 # CSVの読み込み
@@ -99,7 +98,7 @@ def calc_num_by_opt(food_df, req_df, food_max_num):
     # 選択された食材数
     opted_food_num = len(result_df)
 
-    return result_df, total_cost, opted_food_num
+    return LpStatus[status], result_df, total_cost, opted_food_num
 
 
 # 選ばれた食材について総栄養を表示
@@ -139,11 +138,11 @@ def make_df_for_graph(nut_df_by_opted_food, req_df, opted_df, opted_food_num):
 
 
 # グラフ用のデータフレームからグラフを作成
-def show_stack_bargraph(df, title, ytitle, opted_food_num):
+def show_stack_bargraph(df, graph_title, ytitle, opted_food_num):
     data = [go.Bar(x=df.index, y=df.iloc[:, i], name=df.columns[i])
             for i in range(opted_food_num)]
     layout = go.Layout(
-        title=go.layout.Title(text=title),
+        title=go.layout.Title(text=graph_title),
         xaxis=go.layout.XAxis(title=df.index.name),
         yaxis=go.layout.YAxis(title=ytitle),
         barmode="stack",
@@ -164,23 +163,48 @@ def add_horizon_line(fig, const, color, nut_num):
     return fig
 
 
+# プログラム実行&結果描画
 # sidebar
 st.sidebar.markdown(('# How to use'))
-st.sidebar.text(
-    '君が食べるものを選択して、下のボタンをポチポチやってね。\
-    いい感じにコストを抑えて栄養が取れるように最適化するよ！さぁ、君も健康になっちゃおう！')
-food_max_num = st.sidebar.number_input(label='同食材最大選択数', min_value=1,
-                                       value=8, step=1)
-lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
-                                           6.0, (0.6, 3.0), 0.1)
+mode = st.sidebar.radio(label='計算モード', options=('単純可視化', '最適化計算'))
 
-# 上の定義変更を受けて最適化を再計算（自動実行）
-food_df, fig = main()
+if mode == '単純可視化':
+    st.sidebar.text(
+        '単純可視化の説明')
 
-# main contents
-st.title('Optimizetion of your diet')
-st.markdown('')
-st.markdown('')
-st.markdown('最適化対象食材リスト')
-st.write(food_df)
-st.write(fig)
+if mode == '最適化計算':
+    st.sidebar.text('''
+    普段食べるものを選択して、
+    下の最大摂取数と摂取栄養倍率範囲を選択
+    最も少ないコストで、指定倍率範囲の栄養が
+    取れるように最適化します''')
+    food_max_num = st.sidebar.number_input(label='同食材最大選択数', min_value=1,
+                                           value=8, step=1)
+    lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
+                                               6.0, (0.6, 3.0), 0.1)
+
+    # 上の定義変更を受けて最適化を再計算（自動実行）
+    opt_status, food_df, total_cost, opted_df, fig = main_process()
+
+    # main contents
+    st.title('Optimizetion of your diet')
+    st.markdown('')
+    st.markdown('')
+
+    st.markdown('## 最適化対象食品リスト')
+    st.markdown('')
+    st.write(food_df)
+
+    st.markdown('')
+    st.markdown('')
+
+    # 最適化計算に成功した場合結果を表示、失敗したらアラート
+    st.markdown('## 最適化結果')
+    if opt_status == 'Optimal':
+        st.write(fig)
+        st.markdown('### 最適な食品の組み合わせと総コスト')
+        st.markdown(total_cost)
+        st.write(opted_df)
+    else:
+        st.write('''最適化に失敗
+        制約を緩めてください。''')
