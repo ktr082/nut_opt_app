@@ -5,14 +5,7 @@ import plotly.io as pio
 import streamlit as st
 
 
-# 定数生成
-lower_rate = 0.5
-upper_rate = 3.0
-food_max_num = 8  # 同じものを何単位食べていいか
-
-
 def show_opt_nutrition(lower_rate, upper_rate, food_max_num):
-    # 上の定義変更を受けて最適化を再計算（自動実行）
     opt_status, food_df, total_cost, opted_df, fig = main_process(
         lower_rate, upper_rate, food_max_num)
 
@@ -57,7 +50,7 @@ def main_process(lower_rate, upper_rate, food_max_num):
     nut_df_by_opted_food = calc_nut_by_food(opted_df)
     # 可視化用に各食材ごとの栄養素と基準に対する割合を算出
     graph_df, graph_df_rate = make_df_for_graph(
-        nut_df_by_opted_food, req_df, opted_df, opted_food_num)
+        nut_df_by_opted_food, req_df, opted_df, lower_rate, upper_rate, opted_food_num)
     fig = show_stack_bargraph(
         graph_df_rate, '最適化結果グラフ', '基準量に対する割合', opted_food_num)
     add_horizon_line(fig, upper_rate, 'Blue', nut_num)
@@ -140,7 +133,7 @@ def calc_nut_by_food(opted_df):
 
 
 # 食材ごとの栄養素量を計算したテーブルから、基準に対する割合を算出
-def make_df_for_graph(nut_df_by_opted_food, req_df, opted_df, opted_food_num):
+def make_df_for_graph(nut_df_by_opted_food, req_df, opted_df, lower_rate, upper_rate, opted_food_num):
     total_nut = nut_df_by_opted_food.iloc[:, 4:-1].sum()
     total_nut = pd.DataFrame(total_nut).T
     lower_limit_df = req_df * lower_rate
