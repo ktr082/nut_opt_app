@@ -25,3 +25,5 @@ if mode == '最適化計算':
     lower_rate, upper_rate = st.sidebar.slider('Select a range of values', 0.0,
                                                6.0, (0.6, 3.0), 0.1)
     on.show_opt_nutrition(lower_rate, upper_rate, food_max_num)
+
+#テスト用無駄なコメント
